@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <body>
+
+        <h1>How far are we from the ISS?</h1>
+
+        <div id="googleMap" style="width:100%;height:800px;"></div>
+
+        <script>
+
+            const issLoc = 'https://api.wheretheiss.at/v1/satellites/25544';
+
+            async function getISS() {
+                sacLat = 38.5816
+                sacLong = -121.4944
+
+                const response = await fetch(issLoc);
+                const data = await response.json();
+                const { latitude, longitude, velocity } = data;
+
+                console.log(data);
+
+                var myCenter = new google.maps.LatLng(38.5816,-121.4944);
+                    var mapProp= {
+                        center:myCenter,
+                        zoom:2.4,
+                    };
+
+                var map = new google.maps.Map(document.getElementById('googleMap'),mapProp);
+
+                var marker = new google.maps.Marker({
+                    position: myCenter,
+                });
+
+                marker.setMap(map);
+
+                var issMarker = new google.maps.Marker({
+                    position: new google.maps.LatLng(latitude, longitude),
+                    animation:google.maps.Animation.BOUNCE,
+                });
+
+                issMarker.setMap(map);
+
+                var issInfo = new google.maps.InfoWindow({
+                    content: '<h1>ISS</h1>' +
+                             '<p>Latitude: ' + latitude + '</p>' +
+                             '<p>Longitude: ' + longitude + '</p>' +
+                             '<p>Velocity: ' + velocity + ' km/h' + '</p>'
+                });
+
+                issInfo.open(map, issMarker);
+
+                lon1 =  sacLat * Math.PI / 180
+                lon2 = sacLong * Math.PI / 180;
+                lat1 = latitude * Math.PI / 180;
+                lat2 = longitude * Math.PI / 180;
+
+                let dlon = lon2 - lon1;
+                let dlat = lat2 - lat1;
+                let a = Math.pow(Math.sin(dlat / 2), 2)
+                        + Math.cos(lat1) * Math.cos(lat2)
+                        * Math.pow(Math.sin(dlon / 2),2);
+                    
+                let c = 2 * Math.asin(Math.sqrt(a));
+                let r = 6371;
+
+                let distance = c * r;
+
+                var infowindow = new google.maps.InfoWindow({
+                        content:'<h1>Sacramento</h1>' +
+                                '<p>Distance from ISS: ' + 
+                                distance + ' km' +'</p>'
+                });
+                  
+                infowindow.open(map,marker);
+
+                var sac = new google.maps.LatLng(sacLat,sacLong);
+                var iss = new google.maps.LatLng(latitude,longitude);
+
+                var myTrip = [sac, iss];
+                var flightPath = new google.maps.Polygon({
+                    path:myTrip,
+                    strokeColor:'#0000FF',
+                    strokeOpacity:0.8,
+                    strokeWeight:2
+                });
+
+                flightPath.setMap(map);
+            }
+        </script>
+
+        <script src='https://maps.googleapis.com/maps/api/js?key=&callback=getISS'></script>
+    </body>
+</html>
